@@ -1,14 +1,19 @@
 /*Script para enviar datos del sensor DHT11 desde Arduino Uno mediante el uso del modulo Wifi ESP8266*/
 /* Se importan las librerias del sensor y del modulo WiFi
   Tambien se definen los pines 10, 11 como constantes*/
-#include <DHT11.h>
+//#include <DHT11.h>
 //#include <ESP8266WiFi.h>
+#include "DHT.h"
 #include "SoftwareSerial.h"
 #define RX 10
 #define TX 11
-
+#define DHTPIN 4
+#define DHTTYPE DHT11
+ 
+// Inicializamos el sensor DHT11
+DHT dht(DHTPIN, DHTTYPE);
 /* se asigna la variable del sensor como salida al pin digital D4*/
-DHT11 dht11(4);
+//DHT11 dht11(4);
 
 /*se generan las variables referentes a la red ad-hoc y su clave con el nombre del servidor*/
 String ssid = "Free.Wifi"; //Free.Wifi
@@ -22,9 +27,11 @@ const long interval = 16000;
 /*se establece conexion mediante comandos AT del ESP8266*/
 SoftwareSerial wifi(RX,TX); 
 void sendCommand(String command, int maxTime, char readReplay[]);
+
 void setup()
 {
   Serial.begin(9600);
+  dht.begin();
   wifi.begin(9600);
   /*wifi.println("AT");
   delay(1000);
@@ -43,20 +50,26 @@ void loop()
   unsigned long currentMillis = millis();
   int err;
   int indice = 0;
-  float temp, hum;
+  //float temp, hum;
   String url = "/proyecto.php";
   String dato1 = "?Temperatura=";
   String dato2 = "&Humedad=";
   String dato3 = "&UV=";
-  if ((err = dht11.read(hum, temp)) == 0)
-  {
-    Serial.print("Temperatura: ");
-    Serial.print(temp);
-    Serial.print(" Humedad: ");
-    Serial.print(hum);
-    Serial.println();
+  // Leemos la humedad relativa
+  float hum = dht.readHumidity();
+  // Leemos la temperatura en grados centígrados (por defecto)
+  float temp = dht.readTemperature();
+  // Comprobamos si ha habido algún error en la lectura
+  if (isnan(hum) || isnan(temp)) {
+    Serial.println("Error obteniendo los datos del sensor DHT11");
+    return;
   }
-  delay(1000);
+  Serial.print("Temperatura: ");
+  Serial.print(temp);
+  Serial.print(" Humedad: ");
+  Serial.print(hum);
+  Serial.println(); 
+  delay(15000);  
   
   /* Subiendo datos cada 60 segundos*/
   if (currentMillis - previousMillis >= interval){
@@ -66,7 +79,7 @@ void loop()
                "Connection: close\r\n\r\n";
     sendCommand("AT+CIPMUX=1",5,"OK");
     sendCommand("AT+CIPSTART=0,\"TCP\",\""+ host +"\","+ 80,15,"OK");
-    sendCommand("AT+CIPSEND=0," +String(getData.length()+11),4,">");
+    sendCommand("AT+CIPSEND=0," +String(getData.length()+0),4,">");
     wifi.println(getData);
     countTrueCommand++;
     sendCommand("AT+CIPCLOSE=0",5,"OK");
