@@ -1,6 +1,7 @@
 /*Script para enviar datos del sensor DHT11 desde Arduino Uno mediante el uso del modulo Wifi ESP8266*/
 /* Se importan las librerias del sensor y software serial para el uso del modulo WiFi
   Tambien se definen los pines 4, 10 y 11 como constantes y se define el tipo de variable correspondiente al sensor*/
+/*Instalar desde el gestor de librerias: DHT by Adafruit e importar por .zip la libreria Adafruit_Sensor*/ 
 #include "DHT.h"
 #include "SoftwareSerial.h"
 #define RX 10
